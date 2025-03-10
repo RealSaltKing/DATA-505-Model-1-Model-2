@@ -1,0 +1,70 @@
+---
+title: "Model 1"
+author: "Team Kayle Megginson"
+date: "03/10/2025"
+
+format: 
+  html: 
+    embed-resources: true
+---
+
+
+```{python}
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import cohen_kappa_score
+from sklearn.preprocessing import LabelEncoder
+
+# Load the wine dataset
+wine = pd.read_pickle("https://github.com/cd-public/D505/raw/master/dat/model.pickle")
+
+# Feature engineering
+wine['points_per_price'] = wine['points'] / wine['price']
+wine['log_price'] = wine['price'].apply(np.log)
+wine['wine_age'] = 2025 - wine['year']
+bins = [0, 20, 50, 100, np.inf]
+labels = ['cheap', 'mid', 'expensive', 'luxury']
+wine['price_category'] = pd.cut(wine['price'], bins=bins, labels=labels)
+wine['points_x_price'] = wine['points'] * wine['price']
+wine['points_squared'] = wine['points'] ** 2
+wine['scaled_price'] = (wine['price'] - wine['price'].mean()) / wine['price'].std()
+wine['price_points_ratio'] = wine['price'] / wine['points']
+
+# Convert categorical columns to numeric 
+label_encoder = LabelEncoder()
+wine['province'] = label_encoder.fit_transform(wine['province'])
+
+# Drop non-numeric columns
+wine = wine.select_dtypes(include=['number'])
+
+# Save the modified dataframe
+wine.to_pickle("group_m_naive.pickle")
+
+# Split data into train/test
+train, test = train_test_split(wine, test_size=0.2, stratify=wine['province'])
+
+# Separate features and target variable
+X_train, X_test = train.drop(columns=['province']), test.drop(columns=['province'])
+y_train, y_test = train['province'], test['province']
+
+# Train a Naive Bayes classifier
+nb = GaussianNB()
+nb.fit(X_train, y_train)
+
+# Predict and evaluate with Cohen's Kappa
+y_pred = nb.predict(X_test)
+kappa = cohen_kappa_score(y_test, y_pred)
+
+print(f"Cohen's Kappa Score: {kappa:.4f}")
+
+```
+
+```{python}
+import pandas as pd
+
+wine = pd.read_pickle("group_m_naive.pickle")
+
+# Display the first few rows of the dataset
+print(wine.head())
+```

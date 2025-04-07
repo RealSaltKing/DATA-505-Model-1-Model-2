@@ -1,0 +1,46 @@
+---
+title: "Model 2"
+author: "Kayle Megginson"
+format: html
+editor: visual
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(caret)
+
+bank <- readRDS(gzcon(url("https://cd-public.github.io/D505/dat/BankChurners.rds")))
+```
+
+```{r}
+bank <- bank %>% 
+  mutate(
+    Total_Trans_Ct_per_month = Total_Trans_Ct / Months_on_book,
+    Is_Overdue = if_else(Months_Inactive_12_mon > 3, 1, 0),
+    Credit_Limit_Tier = ntile(Credit_Limit, 3),
+    Has_Contact = if_else(Contacts_Count_12_mon > 2, 1, 0),
+    Avg_Utilization = Avg_Utilization_Ratio
+  ) %>% 
+  select(Churn, Total_Trans_Ct_per_month, Avg_Utilization, Is_Overdue, Credit_Limit_Tier, Has_Contact)
+
+```
+
+```{r}
+set.seed(505)
+
+model <- train(
+  Churn ~ .,
+  data = bank,
+  trControl = trainControl(method = "cv", number = 5),
+  method = "glm",
+  family = "binomial",
+  maxit = 5
+)
+
+model$results['Kappa']
+
+```
+```{r}
+write_rds(bank, file="model_2.rds")
+```
+

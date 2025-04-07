@@ -1,6 +1,6 @@
 ---
 title: "Model 2"
-author: "Kayle Megginson"
+author: "Group 14: Kayle Megginson"
 format: html
 editor: visual
 ---
